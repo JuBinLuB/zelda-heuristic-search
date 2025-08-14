@@ -2,7 +2,7 @@ from colors import Colors
 from PIL import Image
 
 
-def build_map(file_path: str, output_path: str):
+def build_map(file_path: str, output_path: str) -> None:
     try:
         with open(file_path, 'r') as file:
             lines = [line.strip() for line in file.readlines()]
