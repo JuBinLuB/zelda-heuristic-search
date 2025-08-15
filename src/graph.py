@@ -136,14 +136,14 @@ class Graph:
           for y in range(height):
               current_pixel = (x, y)
               pixel_color = image.getpixel((x, y))
+              if pixel_color != Color.DUNGEON_WALL:
+                if pixel_color == Color.LINK or pixel_color == Color.DUNGEON_ENTRANCE:
+                    source_pixel = current_pixel
 
-              if pixel_color == Color.LINK:
-                  source_pixel = current_pixel
-
-              if pixel_color in [Color.MASTER_SWORD, Color.DUNGEON1, Color.DUNGEON2, Color.DUNGEON3]:
-                  destination_pixels.append(current_pixel)
-
-              self.add_edges_for_pixel(current_pixel, width, height, image)
+                if pixel_color in [Color.MASTER_SWORD, Color.DUNGEON1, Color.DUNGEON2, Color.DUNGEON3, Color.PENDANT]:
+                    destination_pixels.append(current_pixel)
+              if pixel_color != Color.DUNGEON_WALL:
+                self.add_edges_for_pixel(current_pixel, width, height, image)
 
       return source_pixel, destination_pixels
 
@@ -171,7 +171,6 @@ class Graph:
           Color.DUNGEON2: 0,
           Color.DUNGEON3: 0,
           Color.PENDANT: 0,
-          Color.DUNGEON_WALL: float('inf'), 
           Color.DUNGEON_ENTRANCE: 0
       }
 

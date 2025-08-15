@@ -2,6 +2,7 @@ from build_map import build_map_from_txt
 from graph import Graph
 from colors import Color
 from load_image import load_image
+from draw_path import draw_path
 
 def main():
     build_map_from_txt(f"../Datasets/txt/dungeon_0.txt", f"../Datasets/bmp/dungeon_0.bmp")
@@ -111,3 +112,6 @@ if __name__ == "__main__":
     graph = Graph()
     sp, dp = graph.build_graph2("../Datasets/bmp/dungeon_0.bmp")
     print(sp, dp)
+
+    draw_path(etapas, output_folder="caminho_final")
+    print("Imagens com os caminhos geradas na pasta 'caminho_final'.")

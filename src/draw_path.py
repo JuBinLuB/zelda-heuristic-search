@@ -1,34 +1,41 @@
-from typing import List, Tuple
 from PIL import Image, ImageDraw
-from colors import Color
+import os
 
-def draw_path(path: List[Tuple[int, int, int]], image_paths: List[str], output_image_paths: List[str]) -> None:
-  """
-  Draw the specified path on the image and save the resulting image for each floor.
+def draw_path(etapas, output_folder="caminho_final"):
+    os.makedirs(output_folder, exist_ok=True)
 
-  Parameters:
-  - path: List of coordinates representing the path to be drawn.
-  - image_paths: List of file paths of the bitmap images.
-  - output_paths: List of file paths to save the resulting images.
-  - max_floors: The maximum number of floors in the building.
+    # Caminho para cada imagem
+    main_map_path = "../Datasets/bmp/main_map.bmp"
+    dungeon_paths = [
+        "../Datasets/bmp/dungeon_0.bmp",
+        "../Datasets/bmp/dungeon_1.bmp",
+        "../Datasets/bmp/dungeon_2.bmp"
+    ]
 
-  Returns:
-  - None
-  """
-  # Load the images and create drawing objects for each floor.
-  original_images = [Image.open(image_path).convert("RGB") for image_path in image_paths]
-  draws = [ImageDraw.Draw(image) for image in original_images]
+    # Carregar imagens
+    images = {
+        "main_map": Image.open(main_map_path).convert("RGB"),
+        "dungeon_0": Image.open(dungeon_paths[0]).convert("RGB"),
+        "dungeon_1": Image.open(dungeon_paths[1]).convert("RGB"),
+        "dungeon_2": Image.open(dungeon_paths[2]).convert("RGB")
+    }
+    draws = {k: ImageDraw.Draw(v) for k, v in images.items()}
 
-  path_color = Color.PATH
+    path_color = (255, 0, 0)  # vermelho
 
-  # Draw the specified path on each floor's image.
-  for x, y, z in path:
-    pixel_color = original_images[z].getpixel((x, y))
+    # Preencher caminhos
+    for etapa in etapas:
+        coords = etapa["caminho"]
+        if "Indo para dungeon" in etapa["etapa"] or "Indo para Master Sword" in etapa["etapa"]:
+            for x, y in coords:
+                draws["main_map"].point((x, y), fill=path_color)
+        elif "Dentro da dungeon" in etapa["etapa"] or "Voltando da dungeon" in etapa["etapa"]:
+            dungeon_index = int(etapa["etapa"].split(" ")[-1]) - 1
+            dungeon_key = f"dungeon_{dungeon_index}"
+            for x, y in coords:
+                draws[dungeon_key].point((x, y), fill=path_color)
 
-    # Check if the pixel color is not a start or end color.
-    if pixel_color not in [Color.LINK, Color.MASTER_SWORD, Color.DUNGEON1, Color.DUNGEON2, Color.DUNGEON3]:
-      draws[z].point((x, y), fill=path_color)
-
-    # Save the resulting image with the drawn path.
-    original_images[z].save(output_image_paths[z])
-  
+    # Salvar imagens
+    images["main_map"].save(os.path.join(output_folder, "main_map_path.bmp"))
+    for i, dungeon_key in enumerate(["dungeon_0", "dungeon_1", "dungeon_2"]):
+        images[dungeon_key].save(os.path.join(output_folder, f"{dungeon_key}_path.bmp"))
