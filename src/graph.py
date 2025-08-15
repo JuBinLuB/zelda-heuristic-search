@@ -4,12 +4,14 @@ from typing import Any, List, Tuple
 from PIL import Image
 from load_image import load_image
 from colors import Color
+import os
 
 class Graph:
   def __init__(self):
     self.num_nodes = 0
     self.num_edges = 0
     self.adj = {}
+    self.map_z_to_dungeon_image = {}
 
   def add_node(self, node: Any) -> None:
     """
@@ -64,6 +66,9 @@ class Graph:
     """
     self.add_directed_edge(u, v, weight)
     self.add_directed_edge(v, u, weight)
+    
+  def get_file_paths(self,folder:str) -> List[str]:
+      return [os.path.join(folder, f) for f in os.listdir(folder) if f.lower().endswith(".bmp")]
 
   def __repr__(self) -> str:
     str = ""
@@ -91,101 +96,108 @@ class Graph:
     for z in range(max_floors):
       width, height = images[z].size
 
-      # Iterate over all pixels in the image.
+ 
       for x in range(width):
         for y in range(height):
           current_pixel = (x, y, z)
           pixel_color = images[z].getpixel((x, y))
 
-          # Check if the pixel is not black.
+
           if pixel_color != Color.BLACK:
             if pixel_color == Color.RED:
               source_pixel = current_pixel
       
             if pixel_color == Color.GREEN:
               destination_pixels.append(current_pixel)
-              
-            # Add edges for the non-black pixel.
+
             self.add_edges_for_pixel(current_pixel, width, height, max_floors, images)
     return (source_pixel, destination_pixels)
-  
-  def add_edges_for_pixel(self, coordinates: Tuple[int, int, int], width: int, height: int, max_floors: int, images: List[Image.Image]) -> None:
-    """
-    Add edges for a non-black pixel in the graph.
-
-    Parameters:
-    - coordinates (tuple): The (x, y, z) coordinates of the current pixel.
-    - width (int): The width of the image.
-    - height (int): The height of the image.
-    - max_floors (int): The maximum number of floors in the building.
-    - images (List[Image.Image]): The list of images containing the floor plans.
-
-    Returns:
-    - None
-    """
-    # Get neighbors of the current pixel.
-    neighbor_coordinates_list = self.get_neighbors(coordinates, width, height, max_floors, images)
-
-    # Define weights for different colors.
-    color_weights = {
-      Color.WHITE: 1,
-      Color.RED: 1,
-      Color.GREEN: 1,
-      Color.GRAY_LIGHT: 2,
-      Color.GRAY_DARK: 4,
-    }
-
-    # Add edges between the current pixel and its neighbors.
-    for neighbor_x, neighbor_y, neighbor_z in neighbor_coordinates_list:
-        # Get the pixel color of the neighbor and calculate your weight.
-        pixel_color = images[neighbor_z].getpixel((neighbor_x, neighbor_y))
-        weight = color_weights.get(pixel_color, None)
-
-        if weight is None:
-          raise ValueError(f"Unknown color found: {pixel_color}")
-        
-        # Check if the neighbor is on the same floor.
-        same_floor = (neighbor_z == coordinates[2])
-
-        if not same_floor:
-          weight = 5  # Higher cost for transitioning between floors.
-        
-        # Add an undirected edge between the current pixel and its neighbor with the calculated weight.
-        self.add_undirected_edge(coordinates, (neighbor_x, neighbor_y, neighbor_z), weight)
-
-  def get_neighbors(self, coordinates: Tuple[int, int, int], width: int, height: int, max_floors: int, images: List[Image.Image]) -> List[Tuple[int, int, int]]:
-    """
-    Get non-black neighbors of a pixel in a bitmap image.
-
-    Parameters:
-    - coordinates (tuple): (x, y, z) coordinates of the pixel.
-    - width (int): Width of the image.
-    - height (int): Height of the image.
-    - max_floors (int): The maximum number of floors in the building.
-    - images (List[Image.Image]): The list of bitmap images for each floor.
-
-    Returns:
-    - A list of coordinates representing non-black neighbors.
-    """
-    neighbors = []
-    x, y, z = coordinates
     
-    # Define directions to check for neighbors: left, right, up, down, front, back.
-    directions = [(x - 1, y, z), (x + 1, y, z), (x, y - 1, z), (x, y + 1, z), (x, y, z + 1), (x, y, z - 1)]
+  def build_graph2(self, image_path) -> Tuple[Tuple[int, int], List[Tuple[int, int]]]:
+      """
+      Build a graph from a single bitmap image (mapa principal).
 
-    # Iterate over each direction.
-    for neighbor_x, neighbor_y, neighbor_z in directions:
-       # Check if the neighbor is within the image boundaries.
-      is_within_bounds = 0 <= neighbor_x < width and 0 <= neighbor_y < height and 0 <= neighbor_z < max_floors
+      Parameters:
+      - image_path (str): File path of the bitmap image.
 
-      if is_within_bounds:
-        # Get the pixel color of the corresponding floor.
-        pixel_color = images[neighbor_z].getpixel((neighbor_x, neighbor_y))
-        
-        # Check if the pixel is not black.
-        if pixel_color != Color.BLACK:
-          neighbors.append((neighbor_x, neighbor_y, neighbor_z))
-    return neighbors
+      Returns:
+      - A tuple containing:
+        - source_pixel: starting point (Link)
+        - destination_pixels: list of target points (entradas das dungeons e Master Sword)
+      """
+      image = load_image(image_path)
+
+      source_pixel = None
+      destination_pixels = []
+
+      width, height = image.size
+
+      for x in range(width):
+          for y in range(height):
+              current_pixel = (x, y)
+              pixel_color = image.getpixel((x, y))
+
+              if pixel_color == Color.LINK:
+                  source_pixel = current_pixel
+
+              if pixel_color in [Color.MASTER_SWORD, Color.DUNGEON1, Color.DUNGEON2, Color.DUNGEON3]:
+                  destination_pixels.append(current_pixel)
+
+              self.add_edges_for_pixel(current_pixel, width, height, image)
+
+      return source_pixel, destination_pixels
+
+  
+  def add_edges_for_pixel(
+      self, 
+      coordinates: Tuple[int, int], 
+      width: int, 
+      height: int, 
+      image: Image.Image
+  ) -> None:
+
+      neighbor_coordinates_list = self.get_neighbors(coordinates, width, height, image)
+
+      color_weights = {
+          Color.GRASS: 10,
+          Color.SAND: 20,
+          Color.FOREST: 100,
+          Color.MOUNTAIN: 150,
+          Color.WATER: 180,
+          Color.DUNGEON_PATH: 10,
+          Color.LINK: 0,
+          Color.MASTER_SWORD: 0,
+          Color.DUNGEON1: 0,
+          Color.DUNGEON2: 0,
+          Color.DUNGEON3: 0,
+          Color.PENDANT: 0,
+          Color.DUNGEON_WALL: float('inf'), 
+          Color.DUNGEON_ENTRANCE: 0
+      }
+
+      for neighbor_x, neighbor_y in neighbor_coordinates_list:
+          pixel_color = image.getpixel((neighbor_x, neighbor_y))
+          weight = color_weights.get(pixel_color)
+          if weight is None:
+              raise ValueError(f"Unknown color found: {pixel_color}")
+
+          self.add_undirected_edge(coordinates, (neighbor_x, neighbor_y), weight)
+
+
+
+  def get_neighbors(self, coordinates, width, height, image):
+      neighbors = []
+      x, y = coordinates
+      directions = [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
+
+      for nx, ny in directions:
+          if 0 <= nx < width and 0 <= ny < height:
+              # usar a imagem correta para o plano atual
+              img = image
+              if img.getpixel((nx, ny)) != Color.DUNGEON_WALL:
+                  neighbors.append((nx, ny))
+      return neighbors
+
   
   def path_bfs(self, source_pixel: Tuple[int, int, int], destination_pixels: List[Tuple[int, int, int]]) -> List[Tuple[int, int, int]]:
     """
@@ -259,3 +271,49 @@ class Graph:
       if u in destination_pixels:
         return self.reconstruct_path(source_pixel, u, pred)
     return []
+
+
+  def a_star(self, source_pixel: Tuple[int, int], destination_pixels: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+      """
+      Apply A* algorithm to find the shortest path from a source pixel to any of the destination pixels in the graph.
+
+      Parameters:
+      - source_pixel: The source pixel (x, y) for the search.
+      - destination_pixels: List of destination pixels (x, y) to find the shortest path to.
+
+      Returns:
+      - List of coordinates representing the shortest path from the source pixel to any of the destination pixels.
+      """
+      import heapq
+
+      open_set = [(0, source_pixel)]  
+      came_from = {source_pixel: None}
+      g_score = {node: float('inf') for node in self.adj}
+      g_score[source_pixel] = 0
+
+      def heuristic(u):
+          ux, uy = u
+          return min(abs(ux - dx) + abs(uy - dy) for dx, dy in destination_pixels)
+
+      while open_set:
+          _, current = heapq.heappop(open_set)
+
+          if current in destination_pixels:
+              
+              path = []
+              while current:
+                  path.append(current)
+                  current = came_from[current]
+              path.reverse()
+              return path
+
+          for neighbor in self.adj[current]:
+              tentative_g_score = g_score[current] + self.adj[current][neighbor]
+              if tentative_g_score < g_score[neighbor]:
+                  g_score[neighbor] = tentative_g_score
+                  priority = tentative_g_score + heuristic(neighbor)
+                  heapq.heappush(open_set, (priority, neighbor))
+                  came_from[neighbor] = current
+
+      return []
+

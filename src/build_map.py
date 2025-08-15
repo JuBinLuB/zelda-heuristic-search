@@ -1,4 +1,4 @@
-from colors import Colors
+from colors import Color
 from PIL import Image
 
 
@@ -26,7 +26,7 @@ def build_map_from_txt(file_path: str, output_path: str) -> None:
 
         for y, line in enumerate(lines):
             for x, char in enumerate(line):
-                image.putpixel((x, y), Colors.char_to_color.get(char, (0, 0, 0)))
+                image.putpixel((x, y), Color.char_to_color.get(char, (0, 0, 0)))
 
         # Save the generated image as BMP.
         image.save(output_path, 'BMP')

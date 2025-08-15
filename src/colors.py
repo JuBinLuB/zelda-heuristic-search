@@ -1,4 +1,4 @@
-class Colors:
+class Color:
     # Terrain Colors
     FOREST = (0, 100, 0)             # F
     GRASS = (144, 238, 144)          # G
