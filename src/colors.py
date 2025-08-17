@@ -1,4 +1,4 @@
-class Color:
+class Colors:
     # Terrain Colors
     FOREST = (0, 100, 0)             # F
     GRASS = (144, 238, 144)          # G
@@ -8,7 +8,7 @@ class Color:
 
     # Special Points
     LINK = (255, 215, 0)             # L
-    MASTER_SWORD = (255, 0, 255)     # S
+    MASTER_SWORD = (0, 255, 255)     # S
     DUNGEON1 = (255, 69, 0)          # 1
     DUNGEON2 = (255, 140, 0)         # 2
     DUNGEON3 = (255, 20, 147)        # 3
@@ -20,7 +20,7 @@ class Color:
     PENDANT = (255, 215, 0)          # P
 
     # Path Color
-    PATH = (255, 0, 0)
+    PATH = (255, 0, 255)
 
     # Mapping from chars to colors
     char_to_color = {

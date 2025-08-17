@@ -1,10 +1,9 @@
-from colors import Color
+from colors import Colors
 from PIL import Image
 
 
 def build_map_from_txt(file_path: str, output_path: str) -> None:
-    """
-    Reads a text file representing a map and generates a BMP image based on defined colors.
+    """Reads a text file representing a map and generates a BMP image based on defined colors.
 
     Parameters:
     - file_path: Path to the input text file containing the map characters.
@@ -26,7 +25,7 @@ def build_map_from_txt(file_path: str, output_path: str) -> None:
 
         for y, line in enumerate(lines):
             for x, char in enumerate(line):
-                image.putpixel((x, y), Color.char_to_color.get(char, (0, 0, 0)))
+                image.putpixel((x, y), Colors.char_to_color.get(char, (0, 0, 0)))
 
         # Save the generated image as BMP.
         image.save(output_path, 'BMP')
