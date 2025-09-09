@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, List
+from typing import Dict, Tuple, List
 
 from colors import Colors
 from graph import Graph
@@ -8,9 +8,9 @@ class ZeldaJourney:
 
     def __init__(self, graphs_info: Dict[str, Dict], dungeons: Dict[Tuple, str]):
         self.graphs_info = graphs_info
+        self.dungeons = dungeons
         self.total_cost = 0
         self.full_path = []
-        self.dungeons = dungeons
         self.steps = []
 
     def run(self) -> List[Tuple[int, int]]:
@@ -44,7 +44,7 @@ class ZeldaJourney:
             if main_graph.image.getpixel(dest) in self.dungeons
         }
 
-        # Enquanto houver dungeons a visitar.
+        # While there are still dungeons to visit.
         while remaining_dungeons:
             best_entry = None
             best_path = None
@@ -64,19 +64,23 @@ class ZeldaJourney:
                 raise ValueError("Nenhuma dungeon alcançável encontrada.")
 
             # 1. Overworld: Current position → dungeon entrance.
-            self._add_path_and_cost(main_graph, best_path, action=f"Overworld → {remaining_dungeons[best_entry]}")
+            self._add_path_and_cost(
+                main_graph, best_path, action=f"Overworld → {remaining_dungeons[best_entry]}")
 
             # 2. Dungeon: entrance → pendant.
             dungeon_info = self.graphs_info[remaining_dungeons[best_entry]]
             dungeon_graph = dungeon_info["graph"]
             pendant_pixel = dungeon_info["destinations"][0]
-            path_to_pendant = dungeon_graph.a_star(dungeon_info["source"], [pendant_pixel])
-            self._add_path_and_cost(dungeon_graph, path_to_pendant, action=f"{remaining_dungeons[best_entry]} → Pendant")
+            path_to_pendant = dungeon_graph.a_star(
+                dungeon_info["source"], [pendant_pixel])
+            self._add_path_and_cost(
+                dungeon_graph, path_to_pendant, action=f"{remaining_dungeons[best_entry]} → Pendant")
 
             # 3. Dungeon: pendant → entrance.
             path_back = dungeon_graph.a_star(
                 pendant_pixel, [dungeon_info["source"]])
-            self._add_path_and_cost(dungeon_graph, path_back, action=f"Pendant → Exit {remaining_dungeons[best_entry]}")
+            self._add_path_and_cost(
+                dungeon_graph, path_back, action=f"Pendant → Exit {remaining_dungeons[best_entry]}")
 
             current_pixel = best_entry
             del remaining_dungeons[best_entry]
@@ -87,8 +91,10 @@ class ZeldaJourney:
             if main_info["graph"].image.getpixel(dest) == Colors.MASTER_SWORD
         ][0]
 
-        path_to_master_sword = main_graph.a_star(current_pixel, [master_sword_pixel])
-        self._add_path_and_cost(main_graph, path_to_master_sword, action="Exit Dungeons → Master Sword")
+        path_to_master_sword = main_graph.a_star(
+            current_pixel, [master_sword_pixel])
+        self._add_path_and_cost(
+            main_graph, path_to_master_sword, action="Exit Dungeons → Master Sword")
 
         return self.full_path
 

@@ -137,12 +137,14 @@ class Graph:
             Colors.FOREST: 100,
             Colors.MOUNTAIN: 150,
             Colors.WATER: 180,
+
             # Special Points.
             Colors.LINK: 10,
             Colors.MASTER_SWORD: 10,
             Colors.DUNGEON1: 20,
             Colors.DUNGEON2: 20,
             Colors.DUNGEON3: 20,
+
             # Dungeon Features.
             Colors.PENDANT: 10,
             Colors.DUNGEON_PATH: 10,
@@ -179,8 +181,7 @@ class Graph:
 
         for nx, ny in directions:
             if 0 <= nx < width and 0 <= ny < height:
-                img = image
-                if img.getpixel((nx, ny)) != Colors.DUNGEON_WALL:
+                if image.getpixel((nx, ny)) != Colors.DUNGEON_WALL:
                     neighbors.append((nx, ny))
         return neighbors
 
